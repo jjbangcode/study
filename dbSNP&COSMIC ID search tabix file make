@@ -1,0 +1,39 @@
+일반 tabix 로 하면 안되더라구 그래서 csi 확장자로 만들어야 함
+
+1. dbsnp file download
+
+2. file format change
+    rs	5	7	91839110	C	T
+    rs	6	7	91747131	A	G
+    rs	7	7	91779557	T	A
+
+3. file sort 
+    sort -k1,1 -k2,2 -V -s ./db_snp_150_GRCH37_id_search.txt > sort_db_snp_150_GRCH37_id_search.txt
+ 
+4.bgzip file make
+  bgzip ./sort_db_snp_150_GRCH37_id_search.txt 
+  
+5.csi 확장자로 index 하기
+  tabix -c ./filename
+
+6. search python code
+  import tabix
+  import os
+  import sys
+  import itertools
+  import subprocess
+  import gzip
+
+  f = open('/home/starjjbang/Storage/part1/SAAVpedia/database/201905_db/xml_SAAV_peptide.txt','r')
+  for f_line in f.xreadlines():
+    f_sp = f_line.strip().split('\t')
+    #['01', 'rs781167513', 'NX_O00482-1', 'O00482', 'ENSG00000116833', 'ENST00000367362', '528:528', 'Y:H', 'HLNGDVPYNNLLIEMLHAK', 'HLNGDVPHNNLLIEMLHAK']
+    q1 = 'tabix /home/starjjbang/Storage/part1/genome_database/dbsnp/3_sort_dbsnp.txt.gz'
+    q2 = 'rs:' + f_sp[1].strip('rs') + '-' + f_sp[1].strip('rs')
+    output = subprocess.check_output(q1 + q2, shell=True)
+    o_sp = output.strip().split('\t')
+    if len(output) > 0:
+      a =  f_sp[0:2] + o_sp[2:] + f_sp[2:]
+
+
+
