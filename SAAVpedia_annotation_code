@@ -1,0 +1,293 @@
+
+0	SAAVPedia ID	SAAVPD00000001
+1	Chr	10
+2	FPos	100003856
+3	GRef	C
+4	GAlt	T
+5	strand	FW
+6	GID	rs374287974
+7	Nextprot ID	NX_Q7Z5L2-3
+8	Uniplot ID	Q7Z5L2
+9	Enemble_Gen	ENSG00000166024
+10	Enemble_TRA	ENST00000370586;ENST00000613938
+11	PPos	166:166
+12	Pref/PAlt	R:W
+13	Rps	LEAK
+14	Aps	WLEAK
+15	EC	correct
+16	QUAL	none
+18	PTM infromation	NULL
+19	PTM class	NULL
+20	1000G	NULL
+21	ESP	O
+22	ExAC	O
+23	ESP_AF_AF	0
+24	SEP_EU_AF	0.000116279
+25	100G_AF	NULL
+26	100G_EAS_AF	NULL
+27	100G_AMR_AF	NULL
+28	100G_AFR_AF	NULL
+29	100G_EUR_AF	NULL
+30	100G_SAS_AF	NULL
+31	VT	NULL
+32	consequnce-Type	NULL
+33	phenotype	NULL
+34	source	NULL
+35	phnotype ontology ID	NULL
+36	phnotype super class	NULL
+37	phnotype parent class ID	NULL
+38	phenotype top class	NULL
+39	Drug bank ID	NULL
+40	Durg name	NULL
+41	Drug Type	NULL
+42	pharmacological gene type	NULL
+43	KEGG	hsa:27291
+44	Enemble_PRO	ENSP00000298999;ENSP00000314018;ENSP00000359616;ENSP00000359618;ENSP00000479916
+45	PharmGKBID	NULL
+46	Drug bank ID	NULL
+47	CHEMBLID	NULL
+48	STRING	9606.ENSP00000298999
+49	PDB ID	NULL
+50	hgnc_id	HGNC:23512
+51	symbol	R3HCC1L
+52	name	R3H domain and …
+53	gene_family	NULL
+54	entrez_id	27291
+55	vega_id	OTTHUMG00000018873
+56	UCSC	uc009xvx.4
+57	ERA ID	AF525304
+58	refseq_accession	NM_014472
+59	PMID	NULL
+60	cosmic	R3HCC1L
+61	omim_id	NULL
+
+
+
+
+
+
+def anno_dat(in_f,key_pos,val_pos):
+	k = []
+	v = []
+	f = open(in_f,'r')
+	for f_line in f.xreadlines():		
+		f_sp = f_line.strip().split('\t')
+		k.append(f_sp[key_pos])
+		v.append('\t'.join(list( f_sp[i] for i in val_pos )))
+	dra = dict(zip(k,v))
+	return(dra)
+
+def anno_dat1(in_f,key_pos,val_pos):
+	k = []
+	v = []
+	f = open(in_f,'r')
+	for f_line in f.xreadlines():
+		if f_line.startswith('#') == False:
+			f_sp = f_line.strip().split('\t')
+			k.append(f_sp[key_pos])
+			v.append('\t'.join(list( f_sp[i] for i in val_pos )))
+	dra = dict(zip(k,v))
+	return(dra)
+
+
+def disease_anno():
+	#disease dictionary
+	dis_dict = anno_dat('/home/starjjbang/Storage/part1/SAAVpedia/data/ENSG/7_phno_pf_source_varid_vf_ontology_category.txt',5,[5,13,11,12,15,16,17,18])
+	re = open('/home/starjjbang/Storage/part1/SAAVpedia/database/201905_db/tmp/1_tmp.txt','w')
+	#['01', 'rs760543320', '1', '216246621', 'T', 'C', 'NX_O75445-1', 'O75445', 'ENSG00000042781', 'ENST00000307340', '1865:1865', 'D:G', 'DVK', 'GVK']
+	f = open('/home/starjjbang/Storage/part1/SAAVpedia/database/201905_db/25_20190522_SAAVpedia_database.txt','r')
+	for f1_line in f.xreadlines():
+		f1_sp = f1_line.strip().split('\t')
+		f1_sp =  [f1_sp[0],f1_sp[2],f1_sp[3],f1_sp[4],f1_sp[5],'FW',f1_sp[1]] + f1_sp[6:14] + ['null','null']
+		#print len(f1_sp), f1_sp
+		a = f1_sp + ['null'] * 45
+		if dis_dict.has_key(f1_sp[6]):
+			key = dis_dict[f1_sp[6]].split('\t')
+			a[32] = key[1]
+			a[33] = key[2]
+			a[34] = key[3]
+			a[35] = key[4]
+			a[36] = key[5]
+			a[37] = key[6]
+			a[38] = key[7]
+		#print len(a)
+		re.write('\t'.join(a) + '\n')
+	re.close()
+
+def id_anno():
+	id_dict = anno_dat('/home/starjjbang/Storage/part1/SAAVpedia/data/anno_file/21_20170928_clean_uniplotid.txt',3,[0,1,4,5,7,8,9,11,14,15,16,12])
+	re = open('/home/starjjbang/Storage/part1/SAAVpedia/database/201905_db/tmp/2_tmp.txt','w')
+	f = open('/home/starjjbang/Storage/part1/SAAVpedia/database/201905_db/tmp/1_tmp.txt','r')
+	for f_line in f.xreadlines():
+		f_sp = f_line.strip().split('\t')
+		key = f_sp[7].split('-')[0]
+		if id_dict.has_key(key):
+			di_re = id_dict[key].split('\t')
+			#['O00519', 'FAAH', 'NA', 'HGNC:3553', 'ENSG00000117480', 'ENST00000243167', 'ENSP00000243167',
+			# 'PA27955', 'CHEMBL2243', '9606.ENSP00000243167', 'NA', 'DB06894;DB08400;DB08385;DB00316;DB02465;DB00818;DB00599']
+			f_sp[46] = di_re[11] #drug_bank
+			f_sp[43] = di_re[2] # KEGG
+			f_sp[51] = di_re[1] # BRG_GS
+			f_sp[54] = di_re[2] # BRG_Entrez
+			f_sp[50] = di_re[3] # BRG_HGNC
+			f_sp[44] = di_re[6] # BRP_Ensembl_Pro
+			f_sp[45] = di_re[7] # BRDR_PharmGKB
+			f_sp[47] = di_re[8] # BRDR_CHEMBL
+			f_sp[48] = di_re[9] # BRB_STRING
+			f_sp[49] = di_re[10] # BRB_PDB
+		re.write('\t'.join(f_sp) + '\n')
+	re.close()
+
+def id1_anno():
+	#'ENSG00000143457': 'golgi phosphoprotein 3 like\tgene with protein product\tAJ296153\t612208\tNA\tOTTHUMG00000035009\tAJ296153'
+	#HGNC:19121	HMGA1P6	high mobility group AT-hook 1 pseudogene 6	pseudogene	13q12.12	NA	NA	100130029	ENSG00000233440	OTTHUMG00000016558	NA	NA	NG_027901	NA	NA	12727900	NA	NA	NA
+	id2_dict = anno_dat('/home/starjjbang/Storage/part1/SAAVpedia/data/anno_file/3_20171011_ENSG_gene_symbol.txt',8,[2,3,10,17,15,9,11,12,16])
+	re = open('/home/starjjbang/Storage/part1/SAAVpedia/database/201905_db/tmp/3_tmp.txt','w')
+	f = open('/home/starjjbang/Storage/part1/SAAVpedia/database/201905_db/tmp/2_tmp.txt','r')
+	for f_line in f.xreadlines():
+		f_sp = f_line.strip().split('\t')
+		if id2_dict.has_key(f_sp[9]):
+			key = id2_dict[f_sp[9]].split('\t')
+			#print key[1],key[2],key[5],key[6],key[7],key[4],key[8]
+			f_sp[52] = key[1] #gene_name
+			f_sp[56] = key[2] #UCSC
+			f_sp[55] = key[5] #vega
+			f_sp[57] = key[6] #ENA
+			f_sp[58] = key[7] #ref_Seq
+			f_sp[59] = key[4] #PMID
+			f_sp[60] = key[8] #COSMIC
+			f_sp[61] = key[3] #omim
+		re.write('\t'.join(f_sp) + '\n')
+	re.close()
+
+
+def G1000_anno():
+	maf_dict = anno_dat('/home/starjjbang/Storage/part1/SAAVpedia/data/anno_file/7_1000G.txt',2,[0,1,3,4,5,6,7,8,9,10,11])
+	re = open('/home/starjjbang/Storage/part1/SAAVpedia/database/201905_db/tmp/4_tmp.txt','w')
+	f = open('/home/starjjbang/Storage/part1/SAAVpedia/database/201905_db/tmp/3_tmp.txt','r')
+	for f_line in f.xreadlines():
+		f_sp = f_line.strip().split('\t')
+		m_key = f_sp[2:6]
+		if maf_dict.has_key(f_sp[1]):
+			key = maf_dict[f_sp[1]].split('\t')
+			print key[7], key[5], key[6], key[4], key[8], key[9], key[10]
+			f_sp[20] = 'O'
+			f_sp[25] = key[7] # AF
+			f_sp[26] = key[5] # EAS
+			f_sp[27] = key[6] # AMR
+			f_sp[28] = key[4] # AFR
+			f_sp[29] = key[8] # EUR
+			f_sp[30] = key[9] # SAS
+			f_sp[31] = key[10] #VT
+		re.write('\t'.join(f_sp) + '\n')
+	re.close()
+
+def ESP_anno():
+	esp_dict = anno_dat1('/home/starjjbang/Storage/part1/SAAVpedia/data/anno_file/4_20170912_SP_ESP6500.txt',2,[7,8,9])
+	re = open('/home/starjjbang/Storage/part1/SAAVpedia/database/201905_db/tmp/5_tmp.txt','w')
+	f = open('/home/starjjbang/Storage/part1/SAAVpedia/database/201905_db/tmp/4_tmp.txt','r')
+	for f_line in f.xreadlines():
+		f_sp = f_line.strip().split('\t')
+		if esp_dict.has_key(f_sp[6]):
+			key = esp_dict[f_sp[6]].split('\t')
+			f_sp[21] = 'O' # ESP
+			f_sp[22] = key[0] # ExAC
+			f_sp[23] = key[1] # AFR
+			f_sp[24] = key[2] # EUR
+		re.write('\t'.join(f_sp) + '\n')
+	re.close()
+
+def drug_anno():
+	drug_dict = anno_dat1('/home/starjjbang/Storage/part1/SAAVpedia/data/anno_file/6_2017_drugbank.txt',1,[2,3,4,6])
+	re = open('/home/starjjbang/Storage/part1/SAAVpedia/database/201905_db/6_20190522_SAAVpedia_database_annotation.txt','w')
+	f = open('/home/starjjbang/Storage/part1/SAAVpedia/database/201905_db/tmp/5_tmp.txt','r')
+	for f_line in f.xreadlines():
+		f_sp = f_line.strip().split('\t')
+		if drug_dict.has_key(f_sp[9]):
+			key = drug_dict[f_sp[9]].split('\t')
+			f_sp[39] = key[0] #drug_bank ID
+			f_sp[40] = key[1] #drug_bank name
+			f_sp[41] = key[2] #drug_type
+			f_sp[42] = key[3] #pharmacological gene type
+		a = [x.replace('NA','null') for x in f_sp ]
+		re.write('\t'.join(a) + '\n')
+	re.close()
+
+
+
+disease_anno()
+id_anno()
+id1_anno()
+G1000_anno()
+ESP_anno()
+drug_anno()
+
+
+
+
+
+
+
+
+
+
+"""
+#/home/starjjbang/Storage/part1/SAAVpedia/data/ENSG/7_phno_pf_source_varid_vf_ontology_category.txt
+#                        32                 33               34          35                36                37          38  
+#       0                1                  2                3           4                  5                6            7
+#['rs6696162', 'missense_variant,', 'ClinVar: phenotyp', 'ClinVar', 'HP:0003593', 'ClinVar: phenotype ', 'HP:0003593', 'ETC']
+
+#4806342	6535	26	\N	Variation	COSM1492467	1	27504	193126	193126	1	Kidney tumour	COSMIC	coding_sequence_variant,intron_variant,upstream_gene_variant	\N	COSMIC	kidney neoplasm	EFO:0003086	kidney disease
+#8374612	52864	32	\N	Variation	rs199475803	1	27504	280529	280529	1	ClinVar: phenotype not specified	ClinVar	synonymous_variant,downstream_gene_variant,regulatory_region_variant	not provided	HP:0003593	ClinVar: phenotype not specified	HP:0003593	ETC
+#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#/home/starjjbang/Storage/part1/SAAVpedia/data/anno_file/21_20170928_clean_uniplotid.txt
+# uniprot P30484	0	35
+# Gene_Name HLA-B 1	42
+# KEGG hsa:3107 2	
+# neXtProt NX_P30484 3	
+# entrez-gene 55280 4	45
+# HUGO HGNC:4932  5	43
+# GeneReviews PPP2R2B 6	
+# ENSG_Gen ENSG00000232126 7	39
+# ENSG_TRa ENST00000450871 8	38
+# ENSG_pro ENSP00000388208 9	37
+# Genecard HIBADH 10	
+# PharmGKB PA29280 11	47
+# Drugbank DB01780 12
+# Gene_Synonym YWHA1 13
+# ChEMBL CHEMBL3710403 14	48
+# String 9606.ENSP00000300161 15	50
+# PDB 1YWT 16 36
+#[0,  1, 4,  5, 7, 8, 9, 11, 14, 15,12]
+#[0,  1, 2,  3, 4, 5, 6,  7,  8,  9,10]
+#[35,42,45, 43,39, 38 37, 47, 48, 50]
+#uniprot, Gene_Name, entrez-gene, HUGO, ENSG_Gen, ENSG_TRa,  ENSG_pro, PharmGKB, Drugbank, String, PDB
+#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#/home/starjjbang/Storage/part1/SAAVpedia/data/anno_file/3_20171011_ENSG_gene_symbol.txt
+# HUGO	HGNC:19121	0
+# GS 	HNRNPA1P29	1
+# Gene_Name 	high mobility group AT-hook 1 pseudogene 6	2	40
+# type 	RNA	3 	41
+# pos 	X13q12.12 	4
+# BRG_UCSC	uc001kqq.1 	11 	44
+# OMIM	616120	17 	46
+# PMID 	14702039	15	49
+# vega	OTTHUMG00000018901	9	51
+# ENA 	AK001860 	11	52	
+#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#/home/starjjbang/Storage/part1/SAAVpedia/data/anno_file/7_1000G.txt
+#                               AFR,    EAS,  AMR,  ALL,      EUR,SAS
+#   0      1         2    3     4       5     6     7        8    9
+#['1', '104116479', 'C', 'A', '0.0008', '0', '0', '0.0008', '0', '0']
+#AFR,EAS,AMR, NA, EUR,ALL, SAS
+#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+
+###############################################################################################
+
+
+#/home/starjjbang/Storage/part1/SAAVpedia/data/anno_file/6_2017_drugbank.txt
+
+"""
