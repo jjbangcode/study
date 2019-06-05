@@ -4,8 +4,11 @@ dbgap data authoized
   https://gdc.cancer.gov/access-data/obtaining-access-controlled-data
   https://public.era.nih.gov/commons/commonsInit.do
 2. dbgap 접속하기
-  2.1 https://public.era.nih.gov/commons/commonsInit.do
+  2.1 https://www.ncbi.nlm.nih.gov/gap/
   2.2 login
-  2.3 
+  2.3 dbGaP Study Accession: phs000178.v10.p8 
+  2.4 creat New research project
+  2.5 study search (phs000178)
+  2.6 https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs000178.v10.p8
 
 3. ![Alt text](/Users/lsy/Desktop/2.png)
