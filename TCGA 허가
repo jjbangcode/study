@@ -2,9 +2,9 @@ dbgap data authoized
 
 1. eRA 계정만들기
   https://gdc.cancer.gov/access-data/obtaining-access-controlled-data
-  https://public.era.nih.gov/commons/public/login.do
+  https://public.era.nih.gov/commons/commonsInit.do
 2. dbgap 접속하기
-  2.1 https://dbgap.ncbi.nlm.nih.gov/aa/wga.cgi?
+  2.1 https://public.era.nih.gov/commons/commonsInit.do
   2.2 login
   2.3 
 
