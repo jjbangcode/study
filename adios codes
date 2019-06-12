@@ -1,0 +1,14 @@
+groping code
+from itertools import groupby
+for key, group in groupby(saav_list, lambda x: x[0]):
+    anno_data = [saav_list[1] for saav_list in group]
+    Saav_pos =   [x.split('|')[0] for x in anno_data]
+    vat_info = []; ENSG =[];   ENST = [];     ENSP = []
+    for a_line in anno_data:
+    	a_sp = a_line.split('|')
+    	vat_info.append(a_sp[1] + ';' + a_sp[2])
+    	ENSG.append(a_sp[3]); ENST.append(a_sp[4])	; 	ENSP.append(a_sp[5])
+
+    c_line = [key,';'.join(Saav_pos),'*'.join(vat_info),';'.join(list(set(ENSG))),';'.join(list(set(ENST))),';'.join(list(set(ENSP)))]
+    re_f.write('|'.join(c_line) + '\n')
+re_f.close()
