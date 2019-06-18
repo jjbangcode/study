@@ -14,3 +14,26 @@ dbgap data authoized
 3. ![Alt text](/Users/lsy/Desktop/2.png)
 
 4. Kbsi5151!!
+
+
+5. data proposal 
+*Research Use Statement (RUS) 
+Provide a brief Research Use Statement for the requested dataset(s)
+
+A RUS is a brief description of the applicant's proposed use of dbGaP dataset(s). The RUS will be reviewed by all NIH Institutes and Centers responsible for data covered by this Data Access Request. Please n
+
+Study for the pathogenic variant detection methods based on genomic mutation and single amino acids variants in cancer.
+
+Next-generation genome sequencing has enabled the discovery of numerous disease/drug-associated non-synonymous single nucleotide variants (nsSNVs) that alter the amino acid sequences of a protein. To predict and interpret pathogenicity and molecular mechanism of various nsSNVs, many deleterious prediction methods for a variant such as SIFT and Polyphen have been widely used. However, all predicted deleterious variants through these methods have been not confirmed at real protein sequence of patients. To overcome these limitations, recently, a small set of Conserved-SAAVs(C-SAAV) which is a proteomic variant conserved from genomic variant has been identified through proteogenomic analysis methods from some research. Although several studies have attempted to characterize and pinpoint pathogenic nsSNVs, few have been confirmed as single amino acid variants (SAAVs) at the protein level. Accordingly, we constructed a proteogenomic data analysis pipeline for SAAV identification and annotation(the paper is under review). During analysis function of SAAVs, a important new question arose “Among SAAVs, and genomic variants that had a deleterious score from SIFT or PolyPhen2, which variant set more contained real pathogenic variants?”  To solve this problem, we are planing to three researches as blow. First, we will compare the ability of pathogenic variant detection between deleterious prediction method (SIFT PolyPhen2)  and C-SAAV using somatic/germline mutations from WES in TCGA-GCD( https://portal.gdc.cancer.gov/), and SAAVs from proteomic data in TCGA-CPTAC(https://cptac-data-portal.georgetown.edu/). Second, We will compare the C-SAAVs detection ability between the proteomic search engines. Third, we make a research plan for identifying pathogenic C-SAAV cancer marker using the genomic variants, proteomic, and clinical data in TCGA. The somatic/germline mutations will be used filtering C-SAAVs between SAAVs. To perform on our analysis, we built a proteogenomic data analysis pipeline for SAAV identification and annotation systematically (the paper is under review). Preferentially, we downloaded breast and ovarian proteomic data set, and we identified 27,595 SAAVs in breast cancer using the pipeline. The ovarian proteomic data are under processing. We have a plan that if proteomic datasets of any cancer will release, we will identify all SAAVs, and detect C-SAAVs using somatic and germline mutation from TCGA. To perform these researches, we are requesting access to controlled access data, including somatic/germline mutation calls (VCF/MCF) generated from WES/WXS in TCGA. These C-SAAVs will be an essential biomarker for cancer therapy.
+
+Non-technical summary 
+What is a "non-technical summary of your Research Use Statement?"
+
+Please enter below a non-technical summary of your RUS suitable for understanding by the general public (written at a high school reading level or below). Please limit your non-technical summary to 1300 characters. 
+
+
+The widely used deleterious variants prediction methods such as SIFT and PolyPhen2 to interpret or identifying pathogenic variants have been not confirmed at real protein sequence of patients. To overcome these limitations, we developed a proteogenomic data analysis pipeline for detecting SAAVs(Single Amino Acid Variant). We assumed that the Conserved-SAAVs(C-SAAV) which is a proteomic variant conserved from the genomic variant, had more potential to be pathogenic variants. However, we do not have any clear evidence that C-SAAVs and deleterious prediction methods have better performance to identify pathogenic variants.
+For this reason, We are planning to compare the ability of pathogenic variant detection between deleterious prediction method(SIFT PolyPhen2)  and C-SAAV using somatic/germline mutations and C-SAAVs.
+
+
+
