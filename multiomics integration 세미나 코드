@@ -1,0 +1,299 @@
+#################################################################
+##### Meta-QC ###################################################
+#################################################################
+
+#install.packages("MetaQC")
+library(MetaQC)
+requireAll(c("proto", "foreach"))
+## Toy Example
+data(brain) #already hugely filtered
+#Two default gmt files are automatically downloaded, 
+#otherwise it is required to locate it correctly.
+#Refer to http://www.broadinstitute.org/gsea/downloads.jsp
+
+address = '/Users/su-younlee/Desktop/msigdb/c2.cp.biocarta.v5.2.symbols.gmt'
+brainQC <- MetaQC(brain, address, filterGenes=FALSE, verbose=TRUE)
+#B is recommended to be >= 1e4 in real application					
+address2 = '/Users/su-younlee/Desktop/msigdb/c2.all.v5.2.symbols.gmt'
+runQC(brainQC, B=1e2, fileForCQCp=address2)
+plot(brainQC)
+
+#-------- prostate cancer dataset --------#
+setwd("C:/Users/admin/Downloads/prostate_txt/")
+#gene * sample 
+library(MetaDE)
+study.names<-c("Welsh","Yu","Lapointe","Varambally","Singh","Wallace","Nanni",
+               "Dhanasekaran","Tomlins")
+prostate.raw<-MetaDE.Read(study.names,skip=rep(1,9),via="txt",matched=T,log=F)
+
+prostate.merged<-MetaDE.merge(prostate.raw)
+prostate.filtered<-MetaDE.filter(prostate.merged, c(0.1,0.1))
+
+Data.QC<-list()
+for(i in 1:9){
+  colnames(prostate.filtered[[i]][[1]])<-prostate.filtered[[i]][[2]]
+  Data.QC[[i]]<-impute.knn(prostate.filtered[[i]][[1]])$data
+}
+
+names(Data.QC)<-names(prostate.filtered)
+ProstateQC <- MetaQC(Data.QC, "c2.all.v3.0.symbols.gmt", filterGenes=F,verbose=TRUE, 
+                     isParallel=F,resp.type="Twoclass")
+runQC(ProstateQC, nPath=NULL, B=1e2, pvalCut=.05,
+      pvalAdjust=FALSE, fileForCQCp="c2.all.v3.0.symbols.gmt")
+
+
+#################################################################
+##### Meta-DE ###################################################
+#################################################################
+
+#install.packages("MetaDE")
+source("https://bioconductor.org/biocLite.R")
+#biocLite("impute")
+#biocLite("Biobase")
+#biocLite("combinat")
+library(MetaDE)
+
+#---example 1: Meta analysis of Differentially expressed genes between two classes----------#
+# here I generate two pseudo datasets
+label1<-rep(0:1,each=5)
+label2<-rep(0:1,each=5)
+exp1<-cbind(matrix(rnorm(5*20),20,5),matrix(rnorm(5*20,2),20,5))
+exp2<-cbind(matrix(rnorm(5*20),20,5),matrix(rnorm(5*20,1.5),20,5))
+heatmap(exp2)
+#the input has to be arranged in lists
+x<-list(list(exp1,label1),list(exp2,label2))
+#here I used the modt test for individual study and used Fisher's method to combine results
+#from multiple studies.
+meta.res1 <- MetaDE.rawdata(x=x, ind.method=c('modt','modt'), meta.method='Fisher', nperm=20)
+
+#------example 2: genes associated with survival-----------#
+# here I generate two pseudo datasets
+exp1<-cbind(matrix(rnorm(5*20),20,5),matrix(rnorm(5*20,2),20,5))
+time1=c(4,3,1,1,2,2,3,10,5,4)
+event1=c(1,1,1,0,1,1,0,0,0,1)
+exp2<-cbind(matrix(rnorm(5*20),20,5),matrix(rnorm(5*20,1.5),20,4))
+time2=c(4,30,1,10,2,12,3,10,50)
+event2=c(0,1,1,0,0,1,0,1,0)
+#again,the input has to be arranged in lists
+test2 <-list(list(x=exp1,y=time1,censoring.status=event1),list(x=exp2,y=time2,censoring.status=event2))
+#here I used the log-rank test for individual study and used Fisher's method to combine results
+#from multiple studies.
+meta.res2<-MetaDE.rawdata(x=test2, ind.method=c('logrank','logrank'), meta.method='Fisher', nperm=20)
+
+#------example 3: Fixed effect model for two studies from paired design-----------#
+label1<-rep(0:1,each=5)
+label2<-rep(0:1,each=5)
+exp1<-cbind(matrix(rnorm(5*20),20,5),matrix(rnorm(5*20,2),20,5))
+exp2<-cbind(matrix(rnorm(5*20),20,5),matrix(rnorm(5*20,1.5),20,5))
+x<-list(list(x=exp1,y=label1),list(x=exp2,y=label2))
+test<- MetaDE.rawdata(x,nperm=1000, meta.method="FEM", paired=rep(FALSE,2))
+
+
+
+
+#################################################################
+##### Meta-PCA ##################################################
+#################################################################
+
+install.packages("MetaPCA")
+library(MetaPCA)
+#Spellman, 1998 Yeast cell cycle data set
+#Consider each synchronization method as a separate data
+data(Spellman) 
+pc <- list(alpha=prcomp(t(Spellman$alpha))$x, cdc15=prcomp(t(Spellman$cdc15))$x,
+           cdc28=prcomp(t(Spellman$cdc28))$x, elu=prcomp(t(Spellman$elu))$x)
+#There are currently 4 meta-pca methods. Run either one of following four.
+metaPC <- MetaPCA(Spellman, method="Eigen", doPreprocess=FALSE)
+metaPC <- MetaPCA(Spellman, method="Angle", doPreprocess=FALSE)
+#Comparing between usual pca and meta-pca
+#The first lows are four data sets based on usual PCA, and 
+#the second rows are by MetaPCA
+#We're looking for a cyclic pattern.
+par(mfrow=c(2,4), cex=1, mar=c(0.2,0.2,0.2,0.2))
+for(i in 1:4) {
+  plot(pc[[i]][,1], pc[[i]][,2], type="n", xlab="", ylab="", xaxt="n", yaxt="n")
+  text(pc[[i]][,1], pc[[i]][,2], 1:nrow(pc[[i]]), cex=1.5)
+  lines(pc[[i]][,1], pc[[i]][,2])
+}
+
+for(i in 1:4) {
+  plot(metaPC$x[[i]]$coord[,1], metaPC$x[[i]]$coord[,2], type="n", xlab="", ylab="", xaxt="n", yaxt="n")
+  text(metaPC$x[[i]]$coord[,1], metaPC$x[[i]]$coord[,2], 1:nrow(metaPC$x[[i]]$coord), cex=1.5)
+  lines(metaPC$x[[i]]$coord[,1], metaPC$x[[i]]$coord[,2])
+}
+
+#4 prostate cancer data which have three classes: normal, primary, metastasis
+data(prostate)
+#There are currently 4 meta-pca methods. Run either one of following four.
+metaPC <- MetaPCA(prostate, method="Eigen", doPreprocess=FALSE, .scale=TRUE)
+metaPC <- MetaPCA(prostate, method="Angle", doPreprocess=FALSE)
+#Plotting 4 data in the same space!
+coord <- foreach(dd=iter(metaPC$x), .combine=rbind) %do% dd$coord
+PlotPC2D(coord[,1:2], drawEllipse=F, dataset.name="Prostate", .class.order=c("Metastasis","Primary","Normal"), 
+         .class.color=c('red','#838383','blue'), .annotation=T, newPlot=T,
+         .class2=rep(names(metaPC$x), times=sapply(metaPC$x,function(x)nrow(x$coord))), 
+         .class2.order=names(metaPC$x), .points.size=1)
+
+#In the case of "SparseAngle" method, the top contributing genes for all studies can be determined
+#For instance, top 20 genes in 1st PC and their coefficients
+metaPC$v[order(abs(metaPC$v[,1]), decreasing=TRUE),1][1:20] 
+
+
+
+
+#################################################################
+##### Integrative clustering#####################################
+#################################################################
+
+source("https://bioconductor.org/biocLite.R")
+source("http://bioconductor.org/biocLite.R")
+
+biocLite("iClusterPlus")
+library(iClusterPlus)
+biocLite("GenomicRanges")
+library(GenomicRanges)
+biocLite("gplots")
+library(gplots)
+library(lattice)
+data(gbm)
+dim(gbm.mut)
+
+mut.rate=apply(gbm.mut,2,mean)
+gbm.mut2 = gbm.mut[,which(mut.rate>0.02)]
+gbm.mut2[1:10,1:8]
+dim(gbm.exp)
+gbm.exp[1:3,1:8]
+dim(gbm.seg)
+gbm.seg[1:3,]
+data(variation.hg18.v10.nov.2010)
+gbm.cn=CNregions(seg=gbm.seg,epsilon=0,adaptive=FALSE,rmCNV=TRUE,
+                 cnv=variation.hg18.v10.nov.2010[,3:5],
+                 frac.overlap=0.5, rmSmallseg=TRUE,nProbes=5)
+
+## We reduce the GBM copy number regions to 5K 
+## by removing the redundant regions using function CNregions.
+gbm.cn[1:3,1:5]
+gbm.cn=gbm.cn[order(rownames(gbm.cn)),]
+all(rownames(gbm.cn)==rownames(gbm.exp))
+
+fit.single=iClusterPlus(dt1=gbm.mut2,dt2=gbm.cn,dt3=gbm.exp,
+                        type=c("binomial","gaussian","gaussian"),
+                        lambda=c(0.04,0.04,0.04), K=2, maxiter=10)
+
+bw.col = colorpanel(2,low="white",high="black")
+col.scheme = alist()
+col.scheme[[1]] = bw.col
+col.scheme[[2]] = bluered(256)
+col.scheme[[3]] = bluered(256)
+
+
+chr=unlist(strsplit(colnames(gbm.cn),"\\."))
+chr=chr[seq(1,length(chr),by=2)]
+chr=gsub("chr","",chr)
+chr=as.numeric(chr)
+#truncate the values for a better image plot
+cn.image=gbm.cn
+cn.image[cn.image>1.5]=1.5
+cn.image[cn.image< -1.5]= -1.5
+exp.image=gbm.exp
+exp.image[exp.image>2.5]=2.5
+exp.image[exp.image< -2.5]= -2.5
+
+plotHeatmap(fit=fit.single,datasets=list(gbm.mut2,cn.image,exp.image),
+            type=c("binomial","gaussian","gaussian"), col.scheme = col.scheme,
+            row.order=c(F,F,T),chr=chr,plot.chr=c(F,T,F),sparse=c(T,F,T),cap=c(F,T,F))
+
+
+
+
+#################################################################
+##### Group structured Integrative clustering ###################
+#################################################################
+
+# Install required packages. Note that GST-iCluster is implemented for only UNIX environment.
+set.seed(123)
+install.packages("doMC")
+library(doMC)
+install.packages("pamr")
+library(pamr)
+wget http://tsenglab.biostat.pitt.edu/software/GSTiCluster/GSTiCluster_1.0-6.tar.gz
+R CMD INSTALL GSTiCluster_1.0-6.tar.gz
+library(GSTiCluster)
+
+# Generate two random omics datasets
+mu <- c(-3,1,3)
+Simul_mRNA <- rbind(cbind(matrix(rnorm( 40 * 5 , mu[1] , 0.1), 40 , 5) ,
+                          matrix(rnorm( 40 * 5 , mu[2] , 0.1), 40 , 5) ,
+                          matrix(rnorm( 40 * 5 , mu[3] , 0.1), 40 , 5)
+),
+matrix(rnorm( 10 * 15 , 0 , 0.1), 10 , 15))
+
+mu <- c(1,3,-3)
+Simul_methyl <- rbind(cbind(matrix(rnorm( 40 * 5 , mu[1] , 0.1), 40 , 5) ,
+                            matrix(rnorm( 40 * 5 , mu[2] , 0.1), 40 , 5) ,
+                            matrix(rnorm( 40 * 5 , mu[3] , 0.1), 40 , 5)),
+                      matrix(rnorm( 10 * 15 , 0 , 0.1), 10 , 15))
+# feature modules across two datasets
+null_gr <- rep(0,100); null_gr[ c(1:10, 51:60)] <- 1 ; Group_1 <- null_gr
+null_gr <- rep(0,100); null_gr[ c(11:20, 61:70)] <- 1 ; Group_2 <- null_gr
+null_gr <- rep(0,100); null_gr[ c(21:30, 71:80)] <- 1 ; Group_3 <- null_gr
+null_gr <- rep(0,100); null_gr[ c(31:40, 81:90)] <- 1 ; Group_4 <- null_gr
+
+# Singleton_group
+Group_Single <- matrix(0,20,100)
+Group_Single[1:10,41:50] <- diag(10)
+Group_Single[11:20,91:100] <- diag(10)
+
+# Total feature module
+Total_group <- rbind(Group_1, Group_2, Group_3, Group_4, Group_Single)
+# Combined dataset
+DList <- rbind(Simul_mRNA, Simul_methyl)
+## Example of GS-iCluster
+GSTiCluster(DList, k = 3, Best_lam = 5, f.module = Total_group, is.scale=TRUE)
+
+
+
+# Combined dataset (including non-informative samples)
+## Three non-informative samples
+
+Dat.r.sam <- matrix(rnorm( dim(DList)[1]*3 , 0 , 0.01), dim(DList)[1], 3)
+DDList <- cbind(DList, Dat.r.sam) # dataset combined with three non-informative samples
+
+## Example of GST-iCluster (penalizing out non-informative samples)
+GSTiCluster(DDList, k = 3, Best_lam = 10, f.module = Total_group, is.scale=TRUE,
+            is.tight = TRUE, lambda_1 = 1)
+
+
+
+#################################################################
+##### Integrative phenotyping framework (iPF)  ##################
+#################################################################
+
+wget http://tsenglab.biostat.pitt.edu/software/iPF/iPF_1.0.1.tar.gz
+R CMD INSTALL iPF_1.0.1.tar.gz
+
+library(iPF)
+library(gdata)
+library(doMC)
+library(polycor)
+library(mgcv)
+library(cluster)
+library(matrixStats)
+library(ggplot2)
+library(proto)
+library(mclust)
+registerDoMC(5)
+
+data(DList)
+data(distMat)
+data(Var.types)
+data(diagnosis)
+
+lgrc <- iPF(DList, distMat, Var.types = Var.types, .nx2.too.far = rep(0.001, length(DList)))
+lgrc$doPhenotyping(k=c(3,3), ik=3, .dim=2)
+clsInfo <- lgrc$getClusterInfo(what=diagnosis)
+clsInfo <- lgrc$adjustClusterInfo(clsInfo)
+lgrc$Plot(clsInfo, .dim=2, .name.data="Clinical", .color.2d.range=c(-0.8,0.8), collapse.col=TRUE)
+lgrc$Plot(clsInfo, .dim=2, .name.data="GeneExprs", .color.2d.range=c(-1,1), collapse.row=TRUE)
+
+
