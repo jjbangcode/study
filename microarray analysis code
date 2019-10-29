@@ -1,0 +1,106 @@
+#source("https://bioconductor.org/biocLite.R") 
+#biocLite("hgu133plus2.db")
+biocLite("hursta2a520709cdf")
+library(hursta2a520709cdf)
+library(affy)
+library(hgu133plus2.db)
+library(vioplot)
+
+deg <- function(dat,method, result_file_name)
+{
+  l=colnames(dat)
+  g = factor(l)
+  tp = c()
+  tf = c()
+  for(i in 1:nrow(dat))
+  {
+    test1 = t.test(dat[i,]~g, paired=FALSE)
+    tf[i]  = test1$estimate[1]-test1$estimate[2]
+    tp[i] = test1$p.value
+  }
+  pfdr = p.adjust(tp,method ='fdr')
+  tmp_dat = cbind(tp,pfdr,tf,dat)
+  pid = row.names(tmp_dat)
+  gn = unlist(mget(pid[!is.na(pid)],hgu133plus2ENSEMBL))
+  tmp_dat1  = cbind(gn,tmp_dat)
+  a = tmp_dat1[intersect(which(as.numeric(tmp_dat1[,3]) < 0.05),which(abs(as.numeric(tmp_dat1[,4])) >1)),]
+  dep_dat = apply(a[, 7:12],2,function(x) as.numeric(x))
+  rownames(dep_dat) = rownames(a)
+  deg_dat = aggregate(dep_dat,by = list(Gene = a[,1]),FUN = mean,na.rm = TRUE)
+  deg_sig = as.matrix(apply(deg_dat[,2:7], 1, function(x) mean(x)))
+  rownames(deg_sig) = deg_dat[,1]
+  write.table(deg_sig,result_file_name,sep='\t',quote=FALSE)
+  par(mfrow=c(1,2))
+  plot(tf,-log10(tp), xlab="Fold-change",main="DEG")
+  points(as.numeric(a[,4]),-log10(as.numeric(a[,2])),col="red")
+  hist(as.numeric(tmp_dat1[,4]), main="Fold-change sidtirbution" , xlab="Fold-change",ylim = c(0,30000))
+  print(c(method, nrow(deg_sig)))
+}
+
+label_dat <- function(input_dat)
+{
+  in_data = exprs(input_dat)
+  row_data1 = cbind(in_data[,grep("N-", colnames(in_data))], 
+                    in_data[,grep("FFI", colnames(in_data))])
+  colnames(row_data1) = c(rep("N",2),rep("FFI",6))
+  return(row_data1)
+}
+
+
+nor_data <- function(dir)
+{
+  input_dat = dir
+  setwd(input_dat)
+  raw_dat = ReadAffy()
+  nor_dat = normalize.AffyBatch.quantiles(raw_dat, type=c("separate","pmonly","mmonly","together"))
+  row_data = log(label_dat(raw_dat),2)
+  nor_data = label_dat(nor_dat)
+  par(mfrow=c(1,2))
+  plotDensity(row_data, main="Before Normalization", xlab="log2 expression value",ylim = c(0,1.0),xlim = c(0,20))
+  plotDensity(log(nor_data,2), main="After Normalization", xlab="log2 expression value",ylim = c(0,1.0),xlim = c(0,20))
+  return(nor_data)
+}
+
+SD_GSE40562 = nor_data('/Users/lsy/Desktop/K-data/GSE40562_sleep_disorder_MA/')
+GSE40562_dat = deg(as.matrix(SD_GSE40562),"FDR",'/Users/lsy/Desktop/K-data/GSE40562.txt')
+
+#custom file read
+library(makecdfenv)
+setwd('/Users/lsy/Desktop/K-data/')
+make.cdf.package("GPL10379_HuRSTA-2a520709_custom_MMPM.cdf", "hursta2a520709cdf", species = "Homo sapiens", compress = FALSE)
+install.packages("hursta2a520709cdf/", repos = NULL, type = "source")
+
+dir = '/Users/lsy/Desktop/K-data/GSE56931_selected_files/'
+setwd(dir)
+library(makecdfenv)
+raw_dat = ReadAffy()
+nor_dat = normalize.AffyBatch.quantiles(raw_dat, type=c("separate","pmonly","mmonly","together"))
+nor_dat1 = exprs(nor_dat)
+par(mfrow=c(1,2))
+plotDensity(log(exprs(raw_dat),2), main="Before Normalization", xlab="log2 expression value",ylim = c(0,1.0),xlim = c(0,20))
+plotDensity(log(exprs(nor_dat),2), main="After Normalization", xlab="log2 expression value",ylim = c(0,1.0),xlim = c(0,20))
+
+lab = c()
+sample_lab = as.matrix(read.table('/Users/lsy/Desktop/K-data/GSE56931_sample_composition.txt',sep='\t'))
+dat_lab = colnames(nor_dat1)
+for(i in 1:length(dat_lab))
+{
+lab = c(lab, sample_lab[which(sample_lab[,1]==unlist(strsplit(dat_lab[i],'\\.'))[1]),7])
+
+}
+
+
+
+
+
+
+
+
+#nor_dat = vsn(raw_dat)
+#nor_dat1 = vsnrma(raw_dat)
+#eset <- expresso(raw_dat,bgcorrect.method="rma",normalize.method="quantiles",pmcorrect.method="pmonly",summary.method="medianpolish")
+#vioplot(row_data[,1],row_data[,2],row_data[,3],row_data[,4],row_data[,5],row_data[,6],row_data[,7],row_data[,8],
+# col="#BED7D1",names = colnames(row_data),ylim = c(0,16))
+#vioplot(nor_data[,1],nor_data[,2],nor_data[,3],nor_data[,4],nor_data[,5],nor_data[,6], nor_data[,7],nor_data[,8],
+#  col="#F8E1E7",names = colnames(nor_data),ylim = c(0,16))
+
