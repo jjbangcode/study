@@ -1,0 +1,22 @@
+if (!requireNamespace("BiocManager", quietly=TRUE))
+  install.packages("BiocManager")
+BiocManager::install("TCGAbiolinks")
+
+install.packages("devtools")
+library(devtools)
+devtools::install_github('BioinformaticsFMRP/TCGAbiolinks')
+
+
+library(TCGAbiolinks)
+library(dplyr)
+library(DT)
+query <- GDCquery(project = "TCGA-BRCA", 
+                  data.category = "Clinical",
+                  data.type = "Clinical Supplement", 
+                  data.format = "BCR Biotab")
+GDCdownload(query)
+clinical.BCRtab.all <- GDCprepare(query)
+names(clinical.BCRtab.all)
+a = as.matrix(clinical.BCRtab.all$clinical_drug_brca)
+
+which(a[,2]=="TCGA-BH-A18N")
