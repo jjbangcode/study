@@ -1,0 +1,15 @@
+library(webchem)
+
+cid_mat = c()
+for(i in 1:length(drug_lst))
+{
+  cid = get_cid(trimws(drug_lst[i]) )
+  if(!is.na(cid))
+  {
+    cid_mat = rbind(cid_mat,c(names(cid),unlist(cid)[1]))
+  }
+  if(is.na(cid))
+  {
+    cid_mat = rbind(cid_mat,c(drug_lst[i],'NA'))
+  }
+}
